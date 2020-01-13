@@ -23,7 +23,8 @@ def calculateDiceC(im1, im2):
     return 2 * intersection.sum() / (im1.sum() + im2.sum())
 
 truePlantsPath = 'multi_label/multi_label/'
-pathPredictionPlants = 'res/part2try2/'
+pathPredictionPlants = 'results/part2/'
+pathPredictionPlantsTBM = 'results/part2_tbm/'
 
 truePlants = [[] for y in range(5)]
 predictedPlants = [[] for y in range(5)]
@@ -33,11 +34,15 @@ for file in os.listdir(truePlantsPath):
     img = cv.imread(truePlantsPath+file)
     truePlants[plantId].append(img)
 
-for file in os.listdir(pathPredictionPlants):
-    plantId = int(file.split("_")[2])
-    img = cv.imread(pathPredictionPlants+file)
+for file in os.listdir(pathPredictionPlantsTBM):
+    plantId = int(file.split("_")[3])
+    img = cv.imread(pathPredictionPlantsTBM+file)
     predictedPlants[plantId].append(img)
 
+header = '_tbm'
+f = open("part2_results" + header + ".txt", "w")
+f.write(header)
+#print(len(predictedPlants[4]))
 diceFinal = 0
 iofFinal = 0
 for m in range(5):
@@ -48,11 +53,13 @@ for m in range(5):
     for n in range(180):
         trouePlant = truePlants[m][n]
         prediction = predictedPlants[m][n]
-
+        #print(trouePlant)
         colorsTrue = []
         colorsPrediction = []
         for i in trouePlant:
+            #print("i: ", i)
             for j in i:
+                #print("j: ", j)
                 if j.tolist() not in colorsTrue:
                     colorsTrue.append(j.tolist())
 
@@ -62,7 +69,7 @@ for m in range(5):
                     colorsPrediction .append(j.tolist())
 
         colorsTrue.remove([0,0,0])
-        colorsPrediction .remove([0,0,0])
+        colorsPrediction.remove([0,0,0])
         #print(colorsTrue)
         masks=colorsTrue.copy()
         for i, elem in enumerate(colorsTrue):
@@ -74,19 +81,19 @@ for m in range(5):
             color = np.array(colorsPrediction [i])
             predictions[i] = cv.inRange(prediction, color, color)
 
-        iouforpredictions=[]
-        diceforpredictions=[]
-        for j,z in enumerate(masks):
+        iofPredictions=[]
+        dicePredictions=[]
+        for j,mask in enumerate(masks):
             ioufori=[]
             dicefori=[]
             
-            for i in predictions:
-                dice = calculateDiceC(i,z)
+            for prediction in predictions:
+                dice = calculateDiceC(prediction,mask)
                 dicefori.append(dice)
                 ioufori.append(dice/(2-dice))
             #print(str(colorsTrue[z]))
-            iouforpredictions.append(max(ioufori))
-            diceforpredictions.append(max(dicefori))
+            iofPredictions.append(max(ioufori))
+            dicePredictions.append(max(dicefori))
             # oldDice = dicePerLeaf.myGet(str(colorsTrue[j]))
             # oldDice = oldDice + max(dicefori)
             # dicePerLeaf.myAdd(str(colorsTrue[j]), oldDice)
@@ -95,14 +102,14 @@ for m in range(5):
             # iofPerLeaf.myAdd(str(colorsTrue[j]), oldIof)
 
         for i,z in enumerate(colorsTrue):
-            dicePerLeaf.myAdd(str(colorsTrue[i]), diceforpredictions[i])
-            iofPerLeaf.myAdd(str(colorsTrue[i]), iouforpredictions[i])
+            dicePerLeaf.myAdd(str(colorsTrue[i]), dicePredictions[i])
+            iofPerLeaf.myAdd(str(colorsTrue[i]), iofPredictions[i])
         #print("dice and iof per leaf:")
-        #for i, elem in enumerate(iouforpredictions):
+        #for i, elem in enumerate(iofPredictions):
         #    print(dicePerLeaf[str(colorsTrue[i])], iofPerLeaf[str(colorsTrue[i])])
 
-        diceF = sum(diceforpredictions)/len(diceforpredictions)
-        iofF = sum(iouforpredictions)/len(iouforpredictions)
+        diceF = sum(dicePredictions)/len(dicePredictions)
+        iofF = sum(iofPredictions)/len(iofPredictions)
         dicePerPlant = dicePerPlant + diceF
         iofPerPlant = iofPerPlant + iofF
         #print("dice for plant: ", diceFinal, " iof for plant: ", iofFinal)
@@ -111,8 +118,12 @@ for m in range(5):
     diceFinal = diceFinal + dicePerPlant
     iofFinal = iofFinal + iofPerPlant
     print("plant id: ", m, " dice: ", dicePerPlant, " iof: ", iofPerPlant)
+    f.write("plant id: " + str(m) + " dice: " + str(dicePerPlant) + " iof: " + str(iofPerPlant))
     for k in dicePerLeaf.myGetKeys():
         print("leaf: ", k, " dice: ", dicePerLeaf.myGet(k), " iof: ", iofPerLeaf.myGet(k))
+        f.write("leaf: " + str(k) + " dice: " + str(dicePerLeaf.myGet(k)) + " iof: " + str(iofPerLeaf.myGet(k)))
 diceFinal = diceFinal/5
 iofFinal = iofFinal/5
 print("for the whole sample: dice: ", diceFinal, " iof: ", iofFinal)
+f.write("for the whole sample: dice: " + str(diceFinal) + " iof: " + str(iofFinal))
+f.close()

@@ -4,11 +4,10 @@ import numpy as np
 
 pathPlants = "multi_plant"
 pathTrueResults = "multi_label/multi_label"
-pathBinaryMasks = "res/tmp3/"
-pathTmp = "res/tmptmp/tmp/"
-pathBig = "res/tmptmp/big/"
-pathSmall = "res/tmptmp/small/"
-pathResults = "res/part2try2/"
+pathBinaryMasks = "results/part1/"
+pathResults = "results/part2/"
+pathResultsTBM = "results/part2_tbm/"
+pathTrueBinaryMasks = "binary_masks/"
 
 def getDistance(x, y, center):
     return np.sqrt((center[0]-y)**2 + (center[1]-x)**2)
@@ -37,8 +36,8 @@ i = 0
 results = []
 iters = 0
 MIN_AREA = 40
-for file in os.listdir(pathBinaryMasks):
-    img = cv.imread(pathBinaryMasks+file, 0)
+for file in os.listdir(pathTrueBinaryMasks):
+    img = cv.imread(pathTrueBinaryMasks+file, 0)
     kernel = np.ones((4, 4), np.uint8)
     day = int(file.split("_")[3])
     plantId = int(file.split("_")[2])
@@ -69,7 +68,7 @@ for file in os.listdir(pathBinaryMasks):
         for n in range(columns):
             if img[m][n] > 0:
                 result[m][n] = leafColors[findClosestCenter(m, n, centres)]
-    cv.imwrite(pathResults+"prediction_"+file.split("_", 1)[1], result)
+    cv.imwrite(pathResultsTBM+"predictionTBM_"+file.split("_", 1)[1], result)
 
 
 cv.waitKey(0)
