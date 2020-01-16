@@ -35,12 +35,12 @@ for file in os.listdir(truePlantsPath):
     truePlants[plantId].append(img)
 
 for file in os.listdir(pathPredictionPlantsTBM):
-    plantId = int(file.split("_")[3])
+    plantId = int(file.split("_")[2])
     img = cv.imread(pathPredictionPlantsTBM+file)
     predictedPlants[plantId].append(img)
 
 header = '_tbm'
-f = open("part2_results" + header + ".txt", "w")
+f = open("results/part2_results" + header + ".txt", "w")
 f.write(header)
 #print(len(predictedPlants[4]))
 diceFinal = 0
@@ -86,14 +86,20 @@ for m in range(5):
         for j,mask in enumerate(masks):
             ioufori=[]
             dicefori=[]
-            
+            if(len(predictions)<1):
+                dicefori.append(0)
+                ioufori.append(0)
+                continue
             for prediction in predictions:
                 dice = calculateDiceC(prediction,mask)
                 dicefori.append(dice)
                 ioufori.append(dice/(2-dice))
             #print(str(colorsTrue[z]))
+            vs = ioufori.index(max(ioufori))
+            #indexToDelete = 
             iofPredictions.append(max(ioufori))
             dicePredictions.append(max(dicefori))
+            predictions.remove(predictions[vs])
             # oldDice = dicePerLeaf.myGet(str(colorsTrue[j]))
             # oldDice = oldDice + max(dicefori)
             # dicePerLeaf.myAdd(str(colorsTrue[j]), oldDice)
@@ -101,7 +107,7 @@ for m in range(5):
             # oldIof = oldIof + max(ioufori)
             # iofPerLeaf.myAdd(str(colorsTrue[j]), oldIof)
 
-        for i,z in enumerate(colorsTrue):
+        for i, z in enumerate(colorsTrue):
             dicePerLeaf.myAdd(str(colorsTrue[i]), dicePredictions[i])
             iofPerLeaf.myAdd(str(colorsTrue[i]), iofPredictions[i])
         #print("dice and iof per leaf:")
@@ -118,12 +124,12 @@ for m in range(5):
     diceFinal = diceFinal + dicePerPlant
     iofFinal = iofFinal + iofPerPlant
     print("plant id: ", m, " dice: ", dicePerPlant, " iof: ", iofPerPlant)
-    f.write("plant id: " + str(m) + " dice: " + str(dicePerPlant) + " iof: " + str(iofPerPlant))
+    f.write("plant id: " + str(m) + " dice: " + str(dicePerPlant) + " iof: " + str(iofPerPlant) + "\n")
     for k in dicePerLeaf.myGetKeys():
         print("leaf: ", k, " dice: ", dicePerLeaf.myGet(k), " iof: ", iofPerLeaf.myGet(k))
-        f.write("leaf: " + str(k) + " dice: " + str(dicePerLeaf.myGet(k)) + " iof: " + str(iofPerLeaf.myGet(k)))
+        f.write("leaf: " + str(k) + " dice: " + str(dicePerLeaf.myGet(k)) + " iof: " + str(iofPerLeaf.myGet(k)) + "\n")
 diceFinal = diceFinal/5
 iofFinal = iofFinal/5
 print("for the whole sample: dice: ", diceFinal, " iof: ", iofFinal)
-f.write("for the whole sample: dice: " + str(diceFinal) + " iof: " + str(iofFinal))
+f.write("for the whole sample: dice: " + str(diceFinal) + " iof: " + str(iofFinal) + "\n")
 f.close()

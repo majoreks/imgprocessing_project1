@@ -2,12 +2,24 @@ import os
 import cv2 as cv
 import numpy as np
 
-pathPlants = "multi_plant"
-pathTrueResults = "multi_label/multi_label"
 pathBinaryMasks = "results/part1/"
+pathTrueBinaryMasks = "binary_masks/"
 pathResults = "results/part2/"
 pathResultsTBM = "results/part2_tbm/"
-pathTrueBinaryMasks = "binary_masks/"
+
+#raport
+pathBadCircles = "results/raport/bad/circles/"
+pathBadErosion = "results/raport/bad/erosion/"
+pathGoodCircles = "results/raport/good/circles/"
+pathGoodErosion = "results/raport/good/erosion/"
+pathBadCirclesTBM = "results/raport/bad/circles/tbm/"
+pathBadErosionTBM = "results/raport/bad/erosion/tbm/"
+pathGoodCirclesTBM = "results/raport/good/circles/tbm/"
+pathGoodErosionTBM = "results/raport/good/erosion/tbm/"
+pathBadTBM = "results/raport/bad/binary_masks/tbm/"
+pathBadPrediction = "results/raport/bad/binary_masks/prediction/"
+pathGoodTBM = "results/raport/good/binary_masks/tbm/"
+pathGoodPrediction = "results/raport/good/binary_masks/prediction/"
 
 def getDistance(x, y, center):
     return np.sqrt((center[0]-y)**2 + (center[1]-x)**2)
@@ -36,8 +48,8 @@ i = 0
 results = []
 iters = 0
 MIN_AREA = 40
-for file in os.listdir(pathTrueBinaryMasks):
-    img = cv.imread(pathTrueBinaryMasks+file, 0)
+for file in os.listdir(pathBadPrediction):
+    img = cv.imread(pathBadPrediction+file, 0)
     kernel = np.ones((4, 4), np.uint8)
     day = int(file.split("_")[3])
     plantId = int(file.split("_")[2])
@@ -50,6 +62,7 @@ for file in os.listdir(pathTrueBinaryMasks):
     else:
         iters = 10
     erosion = cv.erode(img, kernel, iterations=iters)
+    #cv.imwrite(pathBadErosion+"erosion_"+file.split("_", 1)[1], erosion)
     contours, _ = cv.findContours(erosion, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     centres = []
     for j, contour in enumerate(contours):
@@ -59,8 +72,9 @@ for file in os.listdir(pathTrueBinaryMasks):
         # if moments['m00'] == 0:
         #     moments['m00'] = 1
         centres.append((int(moments['m10']/moments['m00']), int(moments['m01']/moments['m00'])))
-        # cv.circle(erosion, centres[-1], 3, (0, 0, 0), -1)
-    print(file, day, len(centres), centres)
+        #cv.circle(erosion, centres[-1], 3, (0, 0, 0), -1)
+    #cv.imwrite(pathBadCircles+"centers_"+file.split("_", 1)[1], erosion)
+    #print(file, day, len(centres), centres)
     rows = img.shape[0]
     columns = img.shape[1]
     result = np.zeros((rows, columns, 3))
@@ -68,7 +82,7 @@ for file in os.listdir(pathTrueBinaryMasks):
         for n in range(columns):
             if img[m][n] > 0:
                 result[m][n] = leafColors[findClosestCenter(m, n, centres)]
-    cv.imwrite(pathResultsTBM+"predictionTBM_"+file.split("_", 1)[1], result)
+    cv.imwrite(pathResults+"prediction_"+file.split("_", 1)[1], result)
 
 
 cv.waitKey(0)
