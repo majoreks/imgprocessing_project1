@@ -15,12 +15,23 @@ class myDict(dict):
             return self.get(key)
     def myGetKeys(self):
         return self.keys()
+    def myLen(self):
+        return len(self)
 
 def calculateDiceC(im1, im2):
     im1 = np.asarray(im1).astype(np.bool)
     im2 = np.asarray(im2).astype(np.bool)
     intersection = np.logical_and(im1, im2)
     return 2 * intersection.sum() / (im1.sum() + im2.sum())
+def removearray(L,arr):
+    ind = 0
+    size = len(L)
+    while ind != size and not np.array_equal(L[ind],arr):
+        ind += 1
+    if ind != size:
+        L.pop(ind)
+    else:
+        raise ValueError('array not found in list.')
 
 truePlantsPath = 'multi_label/multi_label/'
 pathPredictionPlants = 'results/part2/'
@@ -66,8 +77,9 @@ for m in range(5):
         for i in prediction:
             for j in i:
                 if j.tolist() not in colorsPrediction :
-                    colorsPrediction .append(j.tolist())
-
+                    colorsPrediction.append(j.tolist())
+        # print(n, "pred colors: ", colorsPrediction)
+        # print(n, "true colors: ", colorsTrue)
         colorsTrue.remove([0,0,0])
         colorsPrediction.remove([0,0,0])
         #print(colorsTrue)
@@ -76,9 +88,9 @@ for m in range(5):
             color = np.array(colorsTrue[i])
             masks[i] = cv.inRange(trouePlant, color, color)
 
-        predictions=colorsPrediction .copy()
+        predictions=colorsPrediction.copy()
         for i, elem in enumerate(colorsPrediction ):
-            color = np.array(colorsPrediction [i])
+            color = np.array(colorsPrediction[i])
             predictions[i] = cv.inRange(prediction, color, color)
 
         iofPredictions=[]
@@ -95,25 +107,45 @@ for m in range(5):
                 dicefori.append(dice)
                 ioufori.append(dice/(2-dice))
             #print(str(colorsTrue[z]))
+            #print(m, n, "predictions: ", predictions)
+            #f.write(str(m) + " " +  str(n) + " prediction:\n" + str(predictions) + "\n")
             vs = ioufori.index(max(ioufori))
             #indexToDelete = 
             iofPredictions.append(max(ioufori))
             dicePredictions.append(max(dicefori))
-            predictions.remove(predictions[vs])
+            #print(m, n, "test ", predictions[vs])
+            #ions.pop(predictions[vs])
+            removearray(predictions, predictions[vs])
             # oldDice = dicePerLeaf.myGet(str(colorsTrue[j]))
             # oldDice = oldDice + max(dicefori)
             # dicePerLeaf.myAdd(str(colorsTrue[j]), oldDice)
             # oldIof = iofPerLeaf.myGet(str(colorsTrue[j]))
             # oldIof = oldIof + max(ioufori)
             # iofPerLeaf.myAdd(str(colorsTrue[j]), oldIof)
-
+        #print("len dicePred", len(dicePredictions))
         for i, z in enumerate(colorsTrue):
-            dicePerLeaf.myAdd(str(colorsTrue[i]), dicePredictions[i])
-            iofPerLeaf.myAdd(str(colorsTrue[i]), iofPredictions[i])
+            # if(dicePerLeaf.myLen()==0):
+            #     continue
+            oldDice = dicePerLeaf.myGet(str(colorsTrue[i]))
+            oldIof = iofPerLeaf.myGet(str(colorsTrue[i]))
+            addDice = 0
+            addIof = 0
+            if(i<len(dicePredictions)):
+                addDice = dicePredictions[i]
+                addIof = iofPredictions[i]
+            newDice = oldDice + addDice
+            newIof = oldIof + addIof
+            dicePerLeaf.myAdd(str(colorsTrue[i]), newDice)
+            iofPerLeaf.myAdd(str(colorsTrue[i]), newIof)
+        print(len(colorsTrue))
+        for dl in dicePerLeaf:
+            print(dicePerLeaf.myGet(dl))
+            dicePerLeaf.myAdd(dl, dicePerLeaf.myGet(dl)/len(colorsTrue))
+            iofPerLeaf.myAdd(dl, iofPerLeaf.myGet(dl)/len(colorsTrue))
         #print("dice and iof per leaf:")
         #for i, elem in enumerate(iofPredictions):
         #    print(dicePerLeaf[str(colorsTrue[i])], iofPerLeaf[str(colorsTrue[i])])
-
+        #print(len())
         diceF = sum(dicePredictions)/len(dicePredictions)
         iofF = sum(iofPredictions)/len(iofPredictions)
         dicePerPlant = dicePerPlant + diceF
