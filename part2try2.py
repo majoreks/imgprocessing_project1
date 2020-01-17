@@ -20,6 +20,8 @@ pathBadTBM = "results/raport/bad/binary_masks/tbm/"
 pathBadPrediction = "results/raport/bad/binary_masks/prediction/"
 pathGoodTBM = "results/raport/good/binary_masks/tbm/"
 pathGoodPrediction = "results/raport/good/binary_masks/prediction/"
+pathTMP = "tmp/mask/"
+pathResTMP = "tmp/res/"
 
 def getDistance(x, y, center):
     return np.sqrt((center[0]-y)**2 + (center[1]-x)**2)
@@ -48,21 +50,22 @@ i = 0
 results = []
 iters = 0
 MIN_AREA = 40
-for file in os.listdir(pathBadPrediction):
-    img = cv.imread(pathBadPrediction+file, 0)
+for file in os.listdir(pathTMP):
+    img = cv.imread(pathTMP+file, 0)
     kernel = np.ones((4, 4), np.uint8)
-    day = int(file.split("_")[3])
     plantId = int(file.split("_")[2])
-    if day <= 2:
-        iters = 2
-    elif day <= 4:
-        iters = 5
-    elif day <= 7:
-        iters = 7
-    else:
-        iters = 10
+    day = int(file.split("_")[3])
+    # if day <= 2:
+    #     iters = 2
+    # elif day <= 4:
+    #     iters = 5
+    # elif day <= 7:
+    #     iters = 7
+    # else:
+    #     iters = 10
+    iters = 7
     erosion = cv.erode(img, kernel, iterations=iters)
-    #cv.imwrite(pathBadErosion+"erosion_"+file.split("_", 1)[1], erosion)
+    cv.imwrite(pathResTMP+"erosion_"+file.split("_", 1)[1], erosion)
     contours, _ = cv.findContours(erosion, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
     centres = []
     for j, contour in enumerate(contours):
@@ -82,7 +85,7 @@ for file in os.listdir(pathBadPrediction):
         for n in range(columns):
             if img[m][n] > 0:
                 result[m][n] = leafColors[findClosestCenter(m, n, centres)]
-    cv.imwrite(pathResults+"prediction_"+file.split("_", 1)[1], result)
+    cv.imwrite(pathResTMP+"prediction_"+file.split("_", 1)[1], result)
 
 
 cv.waitKey(0)
