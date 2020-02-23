@@ -11,5 +11,5 @@ The project has 2 parts:
 Code:  
 * Executing <i>ground_truth_init.py</i> produces binary masks of ground truth images with labeled leaves (used for result assesment later on)  
 * <i>part1.py</i> produces binary masks for actual input images (not ground truth ones) and compares them with ground truth binary masks (produced by <i>ground_truth_init.py</i>).  
-* <i>part2try2.py</i> takes binary masks of plants and tries to separate each leaf.  
+* <i>part2.py</i> takes binary masks of plants and tries to separate each leaf.  
 * <i>assesment.py</i> compares results for part2 to ground truth images.
